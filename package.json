@@ -1,0 +1,34 @@
+{
+  "name": "factapp",
+  "version": "1.0.0",
+  "description": "FactApp generates sentences using markov chains, and a long list of facts as a training set, then posts to facebook.",
+  "main": "FactApp.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoshBolitho/FactApp.git"
+  },
+  "keywords": [
+    "Markov",
+    "Chain",
+    "Facebook",
+    "Bot"
+  ],
+  "author": "Josh Bolitho",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JoshBolitho/FactApp/issues"
+  },
+  "homepage": "https://github.com/JoshBolitho/FactApp#readme",
+  "dependencies": {
+    "canvas": "^2.6.1",
+    "cloudinary": "^1.23.0",
+    "fb": "^2.0.0",
+    "fs": "0.0.1-security",
+    "jimp": "^0.16.1",
+    "node-fetch": "^2.6.1",
+    "unsplash-js": "^6.3.0"
+  }
+}
