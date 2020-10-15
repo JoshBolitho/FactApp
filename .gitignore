@@ -102,4 +102,6 @@ dist
 
 # TernJS port file
 .tern-port
+
+#FACEBOOK, CLOUDINARY, AND UNSPLASH API KEYS
 Secrets.js
