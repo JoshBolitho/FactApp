@@ -8,7 +8,7 @@ const postingFunctions = require('./PostingFunctions');
 const markovFactor = 2;
 const jsonName = `Dict${markovFactor}.json`;
 
-const SourceName = 'NewFacts.txt';
+const sourceName = 'NewFacts.txt';
 const nounFile = '91K nouns.txt';
 
 const sourceImageName = "sourceImage.png";
@@ -21,7 +21,9 @@ function generateDictionaryJson(source, jsonName){
 		var dict = textFunctions.populateDictionary(source,markovFactor);
 		var JsonDict = JSON.stringify(dict);
 		fs.writeFileSync(jsonName,JsonDict);
-	}catch(err){"throw err;"}
+	}catch(err){
+		console.log(err);
+	}
 }
 
 
@@ -35,7 +37,7 @@ function loadDictionaryJson(jsonName){
 
 function generateTextFact(jsonName){
 	try{
-		var factArray = fs.readFileSync(SourceName).toString().split('\n');
+		var factArray = fs.readFileSync(sourceName).toString().split('\n');
 
 		var dict = loadDictionaryJson(jsonName);
 		var generatedSentence = textFunctions.generateSentence(dict,markovFactor,factArray);
@@ -48,7 +50,7 @@ async function publishImagePost(jsonName){
 	try{
 		//Generates a new markov-chain text fact.
 		var textFact = generateTextFact(jsonName);
-		console.log(`dFact: ${textFact}\r\n`);
+		console.log(`Fact: ${textFact}\r\n`);
 		
 		//Attempts to retrieve useful image search keywords from generated text fact. 
 		var searchTerms = textFunctions.findNouns(nounFile, textFact);
@@ -82,11 +84,18 @@ async function publishImagePost(jsonName){
 }
 
 //Main 
+function main(){
+	publishImagePost(jsonName);
+}
 publishImagePost(jsonName);
-
 
 // Exports
 module.exports.generateDictionaryJson = generateDictionaryJson;
 module.exports.loadDictionaryJson = loadDictionaryJson;
 module.exports.generateFact = generateTextFact;
 module.exports.publishImagePost = publishImagePost;
+
+//Testing
+module.exports.main = main;
+module.exports.sourceName = sourceName;
+module.exports.jsonName = jsonName

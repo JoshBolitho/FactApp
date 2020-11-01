@@ -17,10 +17,10 @@ cloudinary.config({
 
 // uploads to cloudinary, then runs postImage() with the image URL returned from cloudinary 
 function uploadCloudinary(imagePath){
-
     return new Promise((resolve,reject) => {
         cloudinary.v2.uploader.upload(imagePath, (err, res) => {
-            if(err) throw new console.error(`${err}`)
+            if(err) throw new console.error(`${err}`);
+            console.log(res);
             return resolve(res.url);
         });
     })
@@ -53,6 +53,7 @@ function generateCaption(inputNouns){
     // Insert Custom Caption Generation Here!
     return "Caption this!"
 }
+
 
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {

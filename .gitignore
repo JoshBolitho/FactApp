@@ -105,3 +105,6 @@ dist
 
 #FACEBOOK, CLOUDINARY, AND UNSPLASH API KEYS
 Secrets.js
+Dict2.json
+*.png
+NewFacts.txt

@@ -136,9 +136,9 @@ async function combineElements(sourceImageName, textImageName, finalImageName) {
 
 		const image = await jimp.read(sourceImageName).catch(function (err){throw err;})
 		const text = await jimp.read(textImageName).catch(function (err){throw err;})
-		
+				
 		image.blit(text, 0, 0).write(finalImageName);
-
+		
 	}catch(err){throw err;}
 }
 
