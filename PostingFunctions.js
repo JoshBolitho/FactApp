@@ -15,12 +15,33 @@ cloudinary.config({
     api_secret: Secrets.CLOUDINARY_API_SECRET 
 });
 
-// uploads to cloudinary, then runs postImage() with the image URL returned from cloudinary 
-function uploadCloudinary(imagePath){
+
+// Uploads to cloudinary, then runs postImage() with the image URL returned from cloudinary 
+async function uploadCloudinary(imagePath){
+    //It appears the best way to test a valid image file exists is to try access it, and handle any errors caused.
+    //Therefore, the current solution is to try 5 times. If cloudinary upload fails after 5 attempts, we abort the upload. 
+
+    for(i=1; i<6;i++){
+        try{
+            var res = await attemptUploadCloudinary(imagePath);
+        }catch(e){
+            continue;
+        }finally{
+            console.log(`Cloudinary upload attempt ${i} successful.\r\n`);
+            return res;
+        }
+    }
+    //upload has failed 5 times, aborting upload.
+    throw new error(`UploadCloudinary() failed 5 times.`);
+}
+
+//Attempt an upload, throw any errors. 
+//This function is called by uploadCloudinary()
+async function attemptUploadCloudinary(imagePath){
+
     return new Promise((resolve,reject) => {
         cloudinary.v2.uploader.upload(imagePath, (err, res) => {
-            if(err) throw new console.error(`${err}`);
-            console.log(res);
+            if(err) throw err;
             return resolve(res.url);
         });
     })

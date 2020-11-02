@@ -5,7 +5,7 @@ const imageFunctions = require('./imageFunctions');
 const postingFunctions = require('./PostingFunctions');
 
 
-const markovFactor = 2;
+const markovFactor = 3;
 const jsonName = `Dict${markovFactor}.json`;
 
 const sourceName = 'NewFacts.txt';
