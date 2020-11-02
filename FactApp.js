@@ -6,7 +6,8 @@ const postingFunctions = require('./PostingFunctions');
 
 
 const markovFactor = 3;
-const jsonName = `Dict${markovFactor}.json`;
+const markovjson = `Dict${markovFactor}.json`;
+const sentencejson = `SplitSentences.json`;
 
 const sourceName = 'NewFacts.txt';
 const nounFile = '91K nouns.txt';
@@ -16,18 +17,25 @@ const textImageName = "textImage.png";
 const finalImageName ='finalImage.png';
 
 
-function generateDictionaryJson(source, jsonName){
+//Generate split sentences .json file and the trained markov .json file
+function generateMarkovJsons(source,sentenceName,markovName){
 	try{
-		var dict = textFunctions.populateDictionary(source,markovFactor);
-		var JsonDict = JSON.stringify(dict);
-		fs.writeFileSync(jsonName,JsonDict);
+		//Split sentence array
+		var array = textFunctions.populateSentenceArray(source);
+		var jsonArray = JSON.stringify(array,null,4);
+		fs.writeFileSync(sentenceName,jsonArray);
+
+		//Trained markov array
+		var dict = textFunctions.populateMarkovDictionary(array,markovFactor);
+		var JsonDict = JSON.stringify(dict,null,4);
+		fs.writeFileSync(markovName,JsonDict);
+
 	}catch(err){
 		console.log(err);
 	}
 }
 
-
-function loadDictionaryJson(jsonName){
+function loadJson(jsonName){
 	try{
 		let jsonData = require(`./${jsonName}`);
 		return jsonData;
@@ -35,21 +43,20 @@ function loadDictionaryJson(jsonName){
 	}catch(err){throw err;}
 }
 
-function generateTextFact(jsonName){
+function generateTextFact(markovName, sentenceName){
 	try{
-		var factArray = fs.readFileSync(sourceName).toString().split('\n');
-
-		var dict = loadDictionaryJson(jsonName);
-		var generatedSentence = textFunctions.generateSentence(dict,markovFactor,factArray);
+		var dict = loadJson(markovName);
+		var array = loadJson(sentenceName);
+		var generatedSentence = textFunctions.generateSentence(dict,markovFactor,array);
 		return generatedSentence;
 
 	}catch(err){throw err;}
 }
 
-async function publishImagePost(jsonName){
+async function publishImagePost(markovName, sentenceName){
 	try{
 		//Generates a new markov-chain text fact.
-		var textFact = generateTextFact(jsonName);
+		var textFact = generateTextFact(markovName,sentenceName);
 		console.log(`Fact: ${textFact}\r\n`);
 		
 		//Attempts to retrieve useful image search keywords from generated text fact. 
@@ -85,17 +92,19 @@ async function publishImagePost(jsonName){
 
 //Main 
 function main(){
-	publishImagePost(jsonName);
+	publishImagePost(markovjson, sentencejson);
 }
-publishImagePost(jsonName);
 
 // Exports
-module.exports.generateDictionaryJson = generateDictionaryJson;
-module.exports.loadDictionaryJson = loadDictionaryJson;
-module.exports.generateFact = generateTextFact;
+module.exports.generateMarkovJsons = generateMarkovJsons;
+module.exports.loadJson = loadJson;
+module.exports.generateTextFact = generateTextFact;
 module.exports.publishImagePost = publishImagePost;
 
 //Testing
 module.exports.main = main;
 module.exports.sourceName = sourceName;
-module.exports.jsonName = jsonName
+module.exports.markovjson = markovjson;
+module.exports.sentencejson = sentencejson;
+
+module.exports.generateMarkovJsons = generateMarkovJsons;

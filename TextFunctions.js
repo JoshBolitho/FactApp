@@ -1,10 +1,7 @@
-const { time } = require('console');
 const fs = require('fs');
 
+function populateSentenceArray(fileName){
 
-function populateDictionary(fileName,markovFactor){
-    // markovFactor can be 1 - 3
-    
     try{
         // Loads the file into array
         var factArray = fs.readFileSync(fileName).toString().split('\n');
@@ -18,34 +15,47 @@ function populateDictionary(fileName,markovFactor){
             factArray[i] =  `Start1 Start2 Start3 ${factArray[i]}`;
         }
 
-        // This dictonary will pair a list containing groups of words with a list of single words likely to follow them
-        var dictionary = [];
+        // This array will store all the sentences, split into tokens.
+        var sentences = [];
 
         //All characters that must preserve their position with the words around them.
         // Items in the matching list are treated as individual words
         const matching = [
-            ", "," ,",': ','; ',', ',",'",',"','-',' -','. ',".'",'."','" ',' "',' $','% ','! ','!"',"!'"," a ","?","=","+",
-            "'s ","'d ","'t ","'"
+            ", ",
+            " ,",
+            ': ',
+            '; ',
+            ', ',
+            ",'",
+            ',"',
+            '-',
+            ' -',
+            '. ',
+            ".'",
+            '."',
+            '" ',
+            ' "',
+            ' $',
+            '% ',
+            '! ',
+            '!"',
+            "!'",
+            " a ",
+            "?",
+            "=",
+            "+",
+            "'s ",
+            "'d ",
+            "'t ",
+            "' ",
+            "'"
         ];
         // Items in the splitting list are removed and used as a place to split words
         const splitting = [' '];
 
         // Loop through the fact list, process each sentence.
         for(i=0;i<factArray.length;i++){
-            
-            
-            if(i % 100 == 0){
 
-                let date_ob = new Date();
-
-                let hours = date_ob.getHours();
-                let minutes = date_ob.getMinutes();
-                let seconds = date_ob.getSeconds();
-
-                var timeStr = `${hours}:${minutes}:${seconds}`
-                console.log(`${timeStr} | Processing line ${i}`);
-            }
-            
             var currentSentence = factArray[i];
             // console.log(currentSentence);
             var processedSentence = [];
@@ -114,6 +124,7 @@ function populateDictionary(fileName,markovFactor){
                 //if no matches with matching or splitting strings are found, move the position 'cursor' forwards:
                 pos++;
             }
+
             //deals with full stops at the very end of the sentence
             var lastWord = processedSentence.pop();
             if(lastWord.replace(/([.])$/gm,"") != lastWord){
@@ -134,13 +145,29 @@ function populateDictionary(fileName,markovFactor){
 
             // Print the processed (split into tokens) sentence
             // console.log(processedSentence);
+            sentences.push(processedSentence);
+        }
+        return sentences;
 
-            // Populate the dictionary
-            for(j=markovFactor;j<processedSentence.length;j++){
+    }catch(err){throw err;}
+
+}
+
+
+function populateMarkovDictionary(sentences,markovFactor){
+    // markovFactor can be 1 - 3
+    try{
+        var dictionary = [];
+
+        for(i = 0; i<sentences.length; i++){            
+
+            var sentence = sentences[i];
+
+            for(j=markovFactor;j<sentence.length;j++){
                 var chain = [];
                 // Adds the 2 or 3 previous words to chain array (2 or 3 depending on what the markovFactor is) 
                 for(k=0;k<markovFactor;k++){
-                    chain.push(processedSentence[j-markovFactor+k]);
+                    chain.push(sentence[j-markovFactor+k]);
                 }
                 // console.log(`chain: ${chain}`);
 
@@ -153,32 +180,30 @@ function populateDictionary(fileName,markovFactor){
                 // If key value pair already exists
                 if(pairLoc >= 0){
                     // Add to the value array of the existing pair
-                    dictionary[pairLoc][1].push(processedSentence[j]);
+                    dictionary[pairLoc][1].push(sentence[j]);
                 }else{
                     // Otherwise, create a new key value pair
-                    dictionary.push([chain,[processedSentence[j]]]);
+                    dictionary.push([chain,[sentence[j]]]);
                 }
+            
             }
         }
-        return dictionary;
-        // console.log(dictionary);
-
+        return dictionary
     }catch(err){throw err;}
 }
 
+//Shallow compare two string arrays
 function compareArrays(arr1, arr2){
-    try{
-
-        return JSON.stringify(arr1) == JSON.stringify(arr2);
-
-    }catch(err){throw err;}
+    return arr1.length == arr2.length && arr1.every(function(u, i){
+        return u == arr2[i];
+    })
 }
+
 
 //Generate a sentence
-function generateSentence(dictionary,markovFactor,factArray){
-    try{
-            
-    // var generateSentence = function(dictionary, markovFactor) {    
+function generateSentence(dictionary,markovFactor,sentenceArray){
+    try{    
+        // var generateSentence = function(dictionary, markovFactor) {    
         var sentenceFinished = false;
         var constructedSentence = [];
         var currentWords = ['Start3'];
@@ -222,15 +247,65 @@ function generateSentence(dictionary,markovFactor,factArray){
         //Print the Array
         // console.log(constructedSentence);
 
+        // Compare constructedSentence with each sentence in sentenceArray ensure the fact hasn't been directly copied from the source text. 
+        for(i=0;i<sentenceArray.length;i++){
+            if(sentenceArray[i].join().includes(constructedSentence.join())){  
+                //Recurse to try again with same parameters. 
+                return generateSentence(dictionary,markovFactor,sentenceArray);
+            }
+        }
+
         // tokens which will not be allowed to have spaces before them
         const noPreceedingSpaces = [
-            ", "," ,",': ','; ',', ',",'",',"','-',' -','. ',".'",'."','" ',' "',' $','% ','! ','!"',"!'",' a ',"?",'.',
-            "'s ","'d ","'t ","'"
+            ", ",
+            " ,",
+            ': ',
+            '; ',
+            ', ',
+            ",'",
+            ',"',
+            '-',
+            ' -',
+            '. ',
+            ".'",
+            '."',
+            '" ',
+            ' "',
+            ' $',
+            '% ',
+            '! ',
+            '!"',
+            "!'",
+            ' a ',
+            "?",
+            '.',
+            "'s ",
+            "'d ",
+            "'t ",
+            "' ",
+            "'"
         ];
         // tokens which will not be allowed to have spaces after them
         const noSucceedingSpaces = [
-            ", "," ,",': ','; ',', ','-','. ','" ',' "',' $','% ','! ',' a ','.',
-            "'s ","'d ","'t ", "'",
+            ", ",
+            " ,",
+            ': ',
+            '; ',
+            ', ',
+            '-',
+            '. ',
+            '" ',
+            ' "',
+            ' $',
+            '% ',
+            '! ',
+            ' a ',
+            '.',
+            "'s ",
+            "'d ",
+            "'t ",
+            "' ",
+            "'"
         ];
 
         // build the sentence correctly using the words in constructedSentence
@@ -244,11 +319,7 @@ function generateSentence(dictionary,markovFactor,factArray){
             }
             connectedSentence += constructedSentence[i];
         }
-        for(i=0;i<factArray.length;i++){
-            if(factArray[i].toLowerCase().includes(connectedSentence.toLowerCase())){
-                return generateSentence(dictionary,markovFactor,factArray);
-            }
-        }
+
         return connectedSentence;
 
     }catch(err){throw err;}
@@ -305,6 +376,7 @@ function startsWith(str, test){
     return true;
 }
 
+module.exports.populateMarkovDictionary = populateMarkovDictionary;
+module.exports.populateSentenceArray = populateSentenceArray;
 module.exports.generateSentence = generateSentence;
-module.exports.populateDictionary = populateDictionary;
 module.exports.findNouns = findNouns;
