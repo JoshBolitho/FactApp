@@ -90,10 +90,7 @@ async function publishImagePost(markovName, sentenceName){
 	}catch(err){throw err;}
 }
 
-//Main 
-function main(){
-	publishImagePost(markovjson, sentencejson);
-}
+publishImagePost(markovjson, sentencejson);
 
 // Exports
 module.exports.generateMarkovJsons = generateMarkovJsons;
@@ -101,10 +98,6 @@ module.exports.loadJson = loadJson;
 module.exports.generateTextFact = generateTextFact;
 module.exports.publishImagePost = publishImagePost;
 
-//Testing
-module.exports.main = main;
 module.exports.sourceName = sourceName;
 module.exports.markovjson = markovjson;
 module.exports.sentencejson = sentencejson;
-
-module.exports.generateMarkovJsons = generateMarkovJsons;
