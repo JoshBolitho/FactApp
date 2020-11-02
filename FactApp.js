@@ -16,7 +16,6 @@ const sourceImageName = "sourceImage.png";
 const textImageName = "textImage.png";
 const finalImageName ='finalImage.png';
 
-
 //Generate split sentences .json file and the trained markov .json file
 function generateMarkovJsons(source,sentenceName,markovName){
 	try{
@@ -81,8 +80,8 @@ async function publishImagePost(markovName, sentenceName){
 		console.log(`Cloudinary URL: ${imageURL}\r\n`);
 
 		//Create a caption for the facebook post 
-		var caption = postingFunctions.generateCaption(searchTerms);
-		console.log(`Caption: ${caption}\r\n`);
+		var caption = await postingFunctions.generateCaption(searchTerms);
+		console.log(`Caption: \r\n${caption}\r\n`);
 		
 		//post image using fb api
 		return postingFunctions.postImage(imageURL,caption);

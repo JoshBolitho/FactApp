@@ -362,7 +362,7 @@ function findNouns(nounFile, sentence){
                 chosenNouns.push('cats')
             }
         }
-        return chosenNouns.join(' ');
+        return chosenNouns;
 
     }catch(err){throw err;}
 }

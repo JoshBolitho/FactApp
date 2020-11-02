@@ -1,5 +1,7 @@
 const {FB} = require('fb');
 const cloudinary = require('cloudinary');
+const fetch = require('node-fetch');
+
 
 const Secrets = require('./Secrets');
 
@@ -70,9 +72,23 @@ function postImage(imageUrl, caption){
     }catch(err){throw err;}
 }
 
-function generateCaption(inputNouns){
-    // Insert Custom Caption Generation Here!
-    return "Caption this!"
+async function generateCaption(inputNouns){
+    var sources = "Source(s): "
+    for(i=0;i<inputNouns.length;i++){
+        var json = await fetch(`https://en.wikipedia.org/w/api.php?action=opensearch&format=json&search=${inputNouns[i]}&namespace=0&limit=10`)
+        .then(res => res.json())
+        .catch((error) => {
+            console.error(error);
+        });
+
+        // console.log(json);
+
+        if(json[3].length>0){
+            sources += `${json[3][0]}\n`;
+        }
+    }
+    
+    return sources;
 }
 
 
