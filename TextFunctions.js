@@ -1,10 +1,10 @@
 const fs = require('fs');
 
-function populateSentenceArray(fileName){
+function populateSentenceArray(sentenceFile){
 
     try{
         // Loads the file into array
-        var factArray = fs.readFileSync(fileName).toString().split('\n');
+        var factArray = fs.readFileSync(sentenceFile).toString().split('\n');
         console.log(`Lines: ${factArray.length}`)
         factArray = [...new Set(factArray)];
         console.log(`Unique Lines: ${factArray.length}`)
@@ -202,8 +202,8 @@ function compareArrays(arr1, arr2){
 
 //Generate a sentence
 function generateSentence(dictionary,markovFactor,sentenceArray){
-    try{    
-        // var generateSentence = function(dictionary, markovFactor) {    
+    try{
+        
         var sentenceFinished = false;
         var constructedSentence = [];
         var currentWords = ['Start3'];
