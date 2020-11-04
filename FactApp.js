@@ -97,7 +97,7 @@ async function publishImagePost(){
 		commentFunctions.updateRecentPostJson(recentPostjson,postID);
 
 		// Optional: Add comment to post
-		commentFunctions.writeComment(postID,"bad bad bullshit");
+		// commentFunctions.writeComment(postID,"");
 
 		return postID
 
