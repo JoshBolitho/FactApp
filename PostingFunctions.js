@@ -1,10 +1,11 @@
 const {FB} = require('fb');
 const cloudinary = require('cloudinary');
+const fetch = require('node-fetch');
 
 const Secrets = require('./Secrets');
 
 
-const id = Secrets.FACEBOOK_ID;  
+const user_id = Secrets.FACEBOOK_USER_ID;  
 const access_token = Secrets.FACEBOOK_ACCESS_TOKEN;
 FB.setAccessToken(access_token);
 
@@ -24,11 +25,10 @@ async function uploadCloudinary(imagePath){
     for(i=1; i<6;i++){
         try{
             var res = await attemptUploadCloudinary(imagePath);
-        }catch(e){
-            continue;
-        }finally{
             console.log(`Cloudinary upload attempt ${i} successful.\r\n`);
             return res;
+        }catch(err){
+            continue;
         }
     }
     //upload has failed 5 times, aborting upload.
@@ -41,40 +41,59 @@ async function attemptUploadCloudinary(imagePath){
 
     return new Promise((resolve,reject) => {
         cloudinary.v2.uploader.upload(imagePath, (err, res) => {
-            if(err) throw err;
+            if(err){
+                return reject(err);
+            }
             return resolve(res.url);
         });
     })
 }
 
 // Uses the FB api to post and image from a cloudinary url, or any other url.  
-function postImage(imageUrl, caption){
+async function postImage(imageUrl, caption){
     try{
-        FB.api(`${id}/photos`, "post", {
-            url: imageUrl,
-            caption: caption
-        }, res => {
-            if (!res || res.error) {
-                console.log(!res ? "Error occurred" : res.error);
-                throw new console.error(`${error}`)
-            }
-            var postID = res.post_id;
-            if(!(postID == "")){
-                console.log("Success. Post ID: " + postID);
-                return true;
-            }
-            console.log("Failed. Post ID: " + postID);
-            return false;
+        return new Promise( function(resolve, reject) {
+            FB.api(`${user_id}/photos`, "post", {
+                url: imageUrl,
+                caption: caption
+            }, res => {
+                if (!res || res.error) {
+                    console.log(!res ? "Error occurred" : res.error);
+                    throw new console.error(`${error}`)
+                }
+                
+                var postID = res.post_id;
+                if(!(postID == "")){
+                    console.log("Success. Post ID: " + postID);
+                    resolve(postID);
+                }else{
+                    console.log("Failed. Post ID: " + postID);
+                    reject(postID);
+                }
+            })
         });
 
     }catch(err){throw err;}
 }
 
-function generateCaption(inputNouns){
-    // Insert Custom Caption Generation Here!
-    return "Caption this!"
-}
+async function generateCaption(inputNouns){
+    var sources = "Source(s): "
+    for(i=0;i<inputNouns.length;i++){
+        var json = await fetch(`https://en.wikipedia.org/w/api.php?action=opensearch&format=json&search=${inputNouns[i]}&namespace=0&limit=10`)
+        .then(res => res.json())
+        .catch((error) => {
+            console.error(error);
+        });
 
+        // console.log(json);
+
+        if(json[3].length>0){
+            sources += `${json[3][0]}\n`;
+        }
+    }
+    
+    return sources;
+}
 
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {

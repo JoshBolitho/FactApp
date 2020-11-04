@@ -1,15 +1,13 @@
 const fs = require('fs');
 
+function populateSentenceArray(sentenceFile){
 
-function populateDictionary(fileName,markovFactor){
-    // markovFactor can be 1 - 3
-    
     try{
         // Loads the file into array
-        var factArray = fs.readFileSync(fileName).toString().split('\n');
-        console.log(`Length: ${factArray.length}`)
+        var factArray = fs.readFileSync(sentenceFile).toString().split('\n');
+        console.log(`Lines: ${factArray.length}`)
         factArray = [...new Set(factArray)];
-        console.log(`Unique Length: ${factArray.length}`)
+        console.log(`Unique Lines: ${factArray.length}`)
 
         // Add "Start1 Start2 Start3 " to the beginning of every sentence.
         // This gives the markov chain generator context for the start of the sentence in chains using up to 4 previous words
@@ -17,12 +15,41 @@ function populateDictionary(fileName,markovFactor){
             factArray[i] =  `Start1 Start2 Start3 ${factArray[i]}`;
         }
 
-        // This dictonary will pair a list containing groups of words with a list of single words likely to follow them
-        var dictionary = [];
+        // This array will store all the sentences, split into tokens.
+        var sentences = [];
 
         //All characters that must preserve their position with the words around them.
         // Items in the matching list are treated as individual words
-        const matching = [", "," ,",': ','; ',', ',",'",',"','-',' -','. ',".'",'."','" ',' "',' $','% ','! ','!"',"!'"," a ","?","=","+","'"];
+        const matching = [
+            ", ",
+            " ,",
+            ': ',
+            '; ',
+            ', ',
+            ",'",
+            ',"',
+            '-',
+            ' -',
+            '. ',
+            ".'",
+            '."',
+            '" ',
+            ' "',
+            ' $',
+            '% ',
+            '! ',
+            '!"',
+            "!'",
+            " a ",
+            "?",
+            "=",
+            "+",
+            "'s ",
+            "'d ",
+            "'t ",
+            "' ",
+            "'"
+        ];
         // Items in the splitting list are removed and used as a place to split words
         const splitting = [' '];
 
@@ -51,49 +78,54 @@ function populateDictionary(fileName,markovFactor){
                     isSentenceProcessed = true;
                     break;
                 }
-                
-                //matching items in the matching list
+
+                //Test sentence at current position for any matches with matching list.
                 for(j=0;j<matching.length;j++){
 
-                    var restOfSentence = currentSentence.slice(pos,currentSentence.length)
-                    // console.log(restOfSentence);
+                    var restOfSentence = currentSentence.slice(pos,currentSentence.length);
+
+                    //test for a match with item in the matching list
                     if(startsWith(restOfSentence,matching[j])){
                         
-                        if(lastSlice<pos-1){
+                        //Slice from the end of the previous slice to the start of the position where we've found our match.
+                        if(lastSlice<pos){
                             processedSentence.push(currentSentence.slice(lastSlice,pos));
                         }
-                        var matchLength = matching[j].length;
+
+                        //Add the matched string to processedSentence as its own token.  
+                        processedSentence.push(matching[j]);
                         
-                        processedSentence.push(currentSentence.slice(pos,pos+matchLength));
-                        
-                        pos += matchLength;
+                        //Move position 'cursor' forwards, to the end of the matched part of the sentence.
+                        pos += matching[j].length;
                         lastSlice = pos;
                         
-                        continue;
+                        //The for loop should break here, as we only want to accept the first match we find.
+                        break;
                     }
                 }
 
-                //splitting with items in splitting list
+                //Test sentence at current position for any matches with splitting list.
+                //Likely, the only character in the splitting list is a space: " "
                 for(j=0;j<splitting.length;j++){
                     if(currentSentence.charAt(pos) === splitting[j]){
                         // a character from the splitting list has been matched, the pos will be moved forward by one,
                         // effectively splitting the string where the character was matched.
-                        // also previous characters in the string up to posare sliced and lastSliceis reset to pos
-                        if(lastSlice<pos-1){
+                        // also previous characters in the string up to pos are sliced and lastSliceis reset to pos
+                        if(lastSlice<pos){
                             processedSentence.push(currentSentence.slice(lastSlice,pos))
                         }
+                        //Move position 'cursor' forwards, after the matched character.
                         pos += 1;
-                        //the next slice will start after the identified character.
                         lastSlice = pos;
-                        // Loop moves to the next position in the currentSentence
-                        continue;
+                        //The for loop should break here, as we only want to accept the first match we find.
+                        break;
                     }
                 }
-                //if no parts have been sliced yet, iterate:
+                //if no matches with matching or splitting strings are found, move the position 'cursor' forwards:
                 pos++;
             }
+
             //deals with full stops at the very end of the sentence
-            // console.log(currentSentence);
             var lastWord = processedSentence.pop();
             if(lastWord.replace(/([.])$/gm,"") != lastWord){
                 // remove fullstop from the end
@@ -101,27 +133,41 @@ function populateDictionary(fileName,markovFactor){
                 // remove \r from the end
                 lastWord = lastWord.replace(/(\r)/gm,"");
                 processedSentence.push(lastWord);
-                //add an full stop as its own word
+                //add a full stop as its own word
                 processedSentence.push('.');
             }else{
-                processedSentence.push(lastWord);
+                // remove \r from the end
+                processedSentence.push(lastWord.replace(/(\r)/gm,""));
             }
 
-            // Remove \r from the end of each line
-            processedSentence[processedSentence.length-1] = processedSentence[processedSentence.length-1].replace(/(\r)/gm,"");
-
-            // This string will represent a sentence end. once the generator reaches an "End1" it will stop generating
+            // This string will represent a sentence end in the trained markov model. Once the generator reaches an "End1" it will stop generating
             processedSentence.push("End1");
 
-            // Print the processed sentences
+            // Print the processed (split into tokens) sentence
             // console.log(processedSentence);
+            sentences.push(processedSentence);
+        }
+        return sentences;
 
-            // Populate the dictionary
-            for(j=markovFactor;j<processedSentence.length;j++){
+    }catch(err){throw err;}
+
+}
+
+
+function populateMarkovDictionary(sentences,markovFactor){
+    // markovFactor can be 1 - 3
+    try{
+        var dictionary = [];
+
+        for(i = 0; i<sentences.length; i++){            
+
+            var sentence = sentences[i];
+
+            for(j=markovFactor;j<sentence.length;j++){
                 var chain = [];
                 // Adds the 2 or 3 previous words to chain array (2 or 3 depending on what the markovFactor is) 
                 for(k=0;k<markovFactor;k++){
-                    chain.push(processedSentence[j-markovFactor+k]);
+                    chain.push(sentence[j-markovFactor+k]);
                 }
                 // console.log(`chain: ${chain}`);
 
@@ -134,32 +180,30 @@ function populateDictionary(fileName,markovFactor){
                 // If key value pair already exists
                 if(pairLoc >= 0){
                     // Add to the value array of the existing pair
-                    dictionary[pairLoc][1].push(processedSentence[j]);
+                    dictionary[pairLoc][1].push(sentence[j]);
                 }else{
                     // Otherwise, create a new key value pair
-                    dictionary.push([chain,[processedSentence[j]]]);
+                    dictionary.push([chain,[sentence[j]]]);
                 }
+            
             }
         }
-        return dictionary;
-        // console.log(dictionary);
-
+        return dictionary
     }catch(err){throw err;}
 }
 
+//Shallow compare two string arrays
 function compareArrays(arr1, arr2){
-    try{
-
-        return JSON.stringify(arr1) == JSON.stringify(arr2);
-
-    }catch(err){throw err;}
+    return arr1.length == arr2.length && arr1.every(function(u, i){
+        return u == arr2[i];
+    })
 }
+
 
 //Generate a sentence
-function generateSentence(dictionary,markovFactor,factArray){
+function generateSentence(dictionary,markovFactor,sentenceArray){
     try{
-            
-    // var generateSentence = function(dictionary, markovFactor) {    
+        
         var sentenceFinished = false;
         var constructedSentence = [];
         var currentWords = ['Start3'];
@@ -203,25 +247,79 @@ function generateSentence(dictionary,markovFactor,factArray){
         //Print the Array
         // console.log(constructedSentence);
 
-        const noPreceedingSpaces = [", "," ,",': ','; ',', ',",'",',"','-',' -','. ',".'",'."','" ',' "',' $','% ','! ','!"',"!'",' a ',"?",'.',"'"];
-        // Characters which will not be allowed to have spaces after them
-        const noSucceedingSpaces = [", "," ,",': ','; ',', ','-','. ','" ',' "',' $','% ','! ',' a ','.',"'"];
-        // build the sentence correctly using the words in constructedSentence
+        // Compare constructedSentence with each sentence in sentenceArray ensure the fact hasn't been directly copied from the source text. 
+        for(i=0;i<sentenceArray.length;i++){
+            if(sentenceArray[i].join().includes(constructedSentence.join())){  
+                //Recurse to try again with same parameters. 
+                return generateSentence(dictionary,markovFactor,sentenceArray);
+            }
+        }
 
-        // Add first word
+        // tokens which will not be allowed to have spaces before them
+        const noPreceedingSpaces = [
+            ", ",
+            " ,",
+            ': ',
+            '; ',
+            ', ',
+            ",'",
+            ',"',
+            '-',
+            ' -',
+            '. ',
+            ".'",
+            '."',
+            '" ',
+            ' "',
+            ' $',
+            '% ',
+            '! ',
+            '!"',
+            "!'",
+            ' a ',
+            "?",
+            '.',
+            "'s ",
+            "'d ",
+            "'t ",
+            "' ",
+            "'"
+        ];
+        // tokens which will not be allowed to have spaces after them
+        const noSucceedingSpaces = [
+            ", ",
+            " ,",
+            ': ',
+            '; ',
+            ', ',
+            '-',
+            '. ',
+            '" ',
+            ' "',
+            ' $',
+            '% ',
+            '! ',
+            ' a ',
+            '.',
+            "'s ",
+            "'d ",
+            "'t ",
+            "' ",
+            "'"
+        ];
+
+        // build the sentence correctly using the words in constructedSentence
+        // Add first token
         var connectedSentence = constructedSentence[0];
+        //Add remaining tokens, testing whether they can have spaces between them.
         for(i=1;i<constructedSentence.length;i++){
-            //whether or not to add preceeding space
+            // A space is only added between tokens if the first token is allowed to have a space after it, and the next token is allowed to have a space before it.
             if(!(noSucceedingSpaces.includes(constructedSentence[i-1]) || noPreceedingSpaces.includes(constructedSentence[i]))){
                 connectedSentence += ' ';
             }
             connectedSentence += constructedSentence[i];
         }
-        for(i=0;i<factArray.length;i++){
-            if(factArray[i].toLowerCase().includes(connectedSentence.toLowerCase())){
-                return generateSentence(dictionary,markovFactor,factArray);
-            }
-        }
+
         return connectedSentence;
 
     }catch(err){throw err;}
@@ -264,7 +362,7 @@ function findNouns(nounFile, sentence){
                 chosenNouns.push('cats')
             }
         }
-        return chosenNouns.join(' ');
+        return chosenNouns;
 
     }catch(err){throw err;}
 }
@@ -278,6 +376,7 @@ function startsWith(str, test){
     return true;
 }
 
+module.exports.populateMarkovDictionary = populateMarkovDictionary;
+module.exports.populateSentenceArray = populateSentenceArray;
 module.exports.generateSentence = generateSentence;
-module.exports.populateDictionary = populateDictionary;
 module.exports.findNouns = findNouns;

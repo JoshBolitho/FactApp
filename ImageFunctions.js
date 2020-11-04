@@ -33,7 +33,7 @@ const maxTextWidth = sideLength-200;// pixels
 const linesAllowed = 14;
 var linesFilled = 0;// records number of rows filled, also used to position the yPos of each line when drawing
 
-function drawTextSentence(sentence, textImageName){
+async function drawTextSentence(sentence, textImageName){
 	try{
 		setTextProperties();
 
@@ -64,7 +64,7 @@ function drawTextSentence(sentence, textImageName){
 			}
 		}
 
-		outputImage(textImageName);
+		await outputImage(textImageName);
 
 	}catch(err){throw err;}
 }
@@ -87,10 +87,10 @@ function drawTextLine(textLine, yValue){
 }
 
 
-function outputImage(name){
+async function outputImage(name){
 	out = fs.createWriteStream(__dirname + `/${name}`), stream = myCanvas.pngStream();
 
-	stream.on('data', function(chunk){
+	await stream.on('data', function(chunk){
 		out.write(chunk);
 	});
 
@@ -133,14 +133,16 @@ function cropImageToSquare(source, sourceImageName){
 
 async function combineElements(sourceImageName, textImageName, finalImageName) {
 	try{
-
 		const image = await jimp.read(sourceImageName).catch(function (err){throw err;})
 		const text = await jimp.read(textImageName).catch(function (err){throw err;})
-				
-		image.blit(text, 0, 0);
-		image.write(finalImageName);
 		
-	}catch(err){throw err;}
+		image.blit(text, 0, 0);
+		await image.writeAsync(finalImageName);
+
+	}catch(err){
+		console.log(err);
+		throw err;
+	}
 }
 
 
