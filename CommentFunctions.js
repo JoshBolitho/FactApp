@@ -46,7 +46,7 @@ async function respondToRecentPosts(recentPostFile){
         var commentSentiments = [];
         for(comment in comments){
             //Ensure this comment hasn't been replied to already, and wasn't posted by the bot.
-            if(!recentPosts[post][1].includes(comment.id) && !comment.id.includes(page_id)){
+            if(!recentPosts[post][1] === undefined && !recentPosts[post][1].includes(comment.id) && !comment.id.includes(page_id)){
                 var sentiment = getCommentSentiment(comments[comment].message);
                 commentSentiments.push([sentiment, comments[comment].id, comments[comment].message]);
             }
