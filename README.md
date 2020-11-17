@@ -1,4 +1,3 @@
-
 # FactApp
 FactApp learns from a list of facts, and generates unique new facts from using markov chains, then posts them to Facebook.
 
@@ -61,6 +60,5 @@ Adding your own sentences to the source text file is highly recommended, and is 
 
 Here are some simple guidelines:
 - Each line of the source text file must be a separate sentence. Ensure there are no empty lines.
-- Stick to simple ASCII characters for sentences, replacing special characters if you must. For example, The text rendering code will not display ```“curved quote marks”``` correctly. These should be replaced with ```"boring quote marks"``` 
-
+- Stick to simple ASCII characters for sentences, replacing special characters if you must. For example, The text rendering code will not display ```“curved quote marks”``` correctly. These should be replaced with ```"boring quote marks"```.
 - The generator will treat different spellings of the same word as entirely separate, so consistent spelling will improve generation. Ideally, you should ensure all sentences conform to either British or American spelling. Microsoft Word can help here.
