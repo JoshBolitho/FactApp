@@ -7,7 +7,7 @@ const page_id = Secrets.FACEBOOK_PAGE_ID;
 const access_token = Secrets.FACEBOOK_ACCESS_TOKEN;
 FB.setAccessToken(access_token);
 
-const maxRecentPostsMonitored = 10;
+const maxRecentPostsMonitored = 100;
 const maxCommentsPerPost = 2;
 
 var negativeSentimentThreshold = -2;
@@ -46,7 +46,12 @@ async function respondToRecentPosts(recentPostFile){
         var commentSentiments = [];
         for(comment in comments){
             //Ensure this comment hasn't been replied to already, and wasn't posted by the bot.
-            if(!recentPosts[post][1].includes(comment.id) && !comment.id.includes(page_id)){
+            if(
+                //ensure the current comment hasn't been replied to already
+                !recentPosts[post][1].includes(comments[comment].id)
+                //ensure the current comment wasn't posted by the bot
+                && !comments[comment].id.includes(page_id)
+            ){
                 var sentiment = getCommentSentiment(comments[comment].message);
                 commentSentiments.push([sentiment, comments[comment].id, comments[comment].message]);
             }
@@ -63,7 +68,7 @@ async function respondToRecentPosts(recentPostFile){
                 //Is the most negative comment negative enough to respond to?
                 var negativeComment = commentSentiments[0];
                 if(negativeComment[0] <= negativeSentimentThreshold){
-                    console.log(`responding negatively to "${negativeComment[2]}"`);
+                    console.log(`=> responding negatively to "${negativeComment[2]}"\r\n`);
                     //Response
                     await writeComment(negativeComment[1],generateNegativeResponse());
                     recentPosts[post][1].push(negativeComment[1]);
@@ -74,7 +79,7 @@ async function respondToRecentPosts(recentPostFile){
                 //Is the most positive comment positive enough to respond to?
                 var positiveComment = commentSentiments[commentSentiments.length-1];
                 if(positiveComment[0] >= positiveSentimentThreshold){
-                    console.log(`responding positively to "${positiveComment[2]}"`);
+                    console.log(`=> responding positively to "${positiveComment[2]}\r\n"`);
                     //Response
                     await writeComment(positiveComment[1],generatePositiveResponse());
                     recentPosts[post][1].push(positiveComment[1]);
@@ -407,69 +412,89 @@ function getCommentSentiment(comment){
 
     var emotivePhrases = [
         ["bullshit",        -2],
+        ["retarded",        -2],
+
+        ["isn't right",     -2],
+        ["not right",       -2],
+        ["incorrect",       -2],
+        ["isn't correct",   -2],
+        ["not correct",     -2],
+        ["untrue",          -2],
+        ["uncool",          -2],
+        ["isn't accurate",  -2],
+        ["inaccurate",      -2],
+        ["not accurate",    -2],
+        ["isn't factual",   -2],
+        ["not factual",     -2],
+
         ["bad",             -1],
         ["stupid",          -1],
         ["dumb",            -1],
         ["wrong",           -1],
+        ["plain wrong",     -1],
         ["hate",            -1],
         ["lame",            -1],
         ["doubt",           -1],
         ["unlikely",        -1],
         ["worst",           -1],
         ["nonsense",        -1],
-        ["retarded",        -2],
-        ["isn't correct",   -1],
-        ["not correct",     -1],
-        ["isn't right",     -1],
-        ["not right",       -1],
         ["awful",           -1],
-        ["incorrect",       -1],
         ["terrible",        -1],
-        ["uncool",          -1],
-        ["untrue",          -1],
         ["repost",          -1],
         ["wtf",             -1],
-        ["plain wrong",     -1],
         ["false",           -1],
         ["sucks",           -1],
-        ["isn't accurate",  -1],
-        ["isn't factual",   -1],
-        ["not accurate",    -1],
-        ["not factual",     -1],
+        ["lie",             -1],
+        ["actually,",       -1],
+        ["misinformation,", -1],
 
-        ["is right",            1],
-        ["actually right",      1],
-        ["is correct",          1],
-        ["actually correct",    1],
-        ["genius",              2],
+
+
+        // ["is true",             1],
+        // ["actually true",       1],
+        ["true",                1],
+        // ["big if true",         1],
+        // ["is correct",          1],
+        // ["actually correct",    1],
+        ["correct",             1],
+        ["incredible",          1],
+        ["credible",            1],
+        // ["is accurate",         1],
+        ["accurate",            1],
+        // ["is factual",          1],
+        ["factual",             1],
+        // ["is right",            1],
+        // ["actually right",      1],
+        ["right",               1],
+
+
+        ["epic",                1],
+        ["seems legit",         1],
+        ["thanks",              1],
+        ["interesting",         1],
+        ["wholesome",           1],
+        ["wonderful",           1],
         ["smart",               1],
         ["clever",              1],
         ["insightful",          1],
         ["intelligent",         1],
+        ["love this page",      1],
         ["love",                1],
         ["impress",             1],
-        ["is true",             1],
-        ["actually true",       1],
         ["good",                1],
         ["like",                1],
         ["best",                1],
         ["brilliant",           1],
         ["awesome",             1],
         ["cool",                1],
-        ["is accurate",         1],
-        ["is factual",          1],
-        ["not wrong",           2],
-        ["not bad",             2],
         ["epic",                1],
-        ["big if true",         1],
+
         ["wholesome",           1],
         ["astonishing",         1],
         ["fascinating",         1],
         ["of course",           1],
         ["amazing",             1],
         ["extraordinary",       1],
-        ["incredible",          1],
-        ["is credible",         1],
         ["mind blowing",        1],
         ["mind-blowing",        1],
         ["remarkable",          1],
@@ -481,9 +506,13 @@ function getCommentSentiment(comment){
         ["never knew",          1],
         ["nice",                1],
         ["sentience",           1],
-        ["makese sense",        1],
+        ["makes sense",         1],
         ["actual fact",         1],
-        ["great",               1]
+        ["great",               1],
+
+        ["not wrong",           2],
+        ["not bad",             2],
+        ["genius",              2],
     ]
 
     var commentLowercase = comment.toLowerCase();
@@ -494,7 +523,7 @@ function getCommentSentiment(comment){
             sentiment += emotivePhrases[phrase][1];
         }
     }
-
+    
     return sentiment;
 }
 
