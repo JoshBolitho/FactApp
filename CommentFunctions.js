@@ -453,6 +453,7 @@ function getCommentSentiment(comment){
         // ["is true",             1],
         // ["actually true",       1],
         ["true",                1],
+        // ["big if true",         1],
         // ["is correct",          1],
         // ["actually correct",    1],
         ["correct",             1],
@@ -470,7 +471,6 @@ function getCommentSentiment(comment){
         ["epic",                1],
         ["seems legit",         1],
         ["thanks",              1],
-
         ["interesting",         1],
         ["wholesome",           1],
         ["wonderful",           1],
@@ -488,7 +488,7 @@ function getCommentSentiment(comment){
         ["awesome",             1],
         ["cool",                1],
         ["epic",                1],
-        ["big if true",         1],
+
         ["wholesome",           1],
         ["astonishing",         1],
         ["fascinating",         1],
