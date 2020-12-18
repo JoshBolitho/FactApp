@@ -1,5 +1,5 @@
 # FactApp
-FactApp learns from a list of facts, and generates unique new facts from using markov chains, then posts them to Facebook.
+FactApp learns from a list of facts, and generates unique new facts using markov chains, then posts them to Facebook.
 
 FactApp is now hosted at [facebook.com/FactBotMarkov](https://www.facebook.com/FactBotMarkov)
 
