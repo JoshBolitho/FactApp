@@ -11,6 +11,7 @@ git clone https://github.com/JoshBolitho/FactApp.git
 cd FactApp
 npm install
 ```
+Note (2023): I had trouble when installing this project on a later version of NodeJS than it was developed on (unknown version ~2018). I managed to get it to install by deleting the package-lock.json file and allowing npm to work out the dependencies.
 
 ### Acquire API Keys
 This project requires a set of access tokens from multiple services. The following keys must be added in place of the default values in ```Secrets.js```:
